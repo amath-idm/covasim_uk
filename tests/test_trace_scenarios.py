@@ -5,13 +5,19 @@ import covasim as cv
 
 t = cv.daydiff('2020-01-21', '2020-09-01')
 
-scenarios = ['low_comp', 'high_comp', 'low_comp_notschools', 'high_comp_notschools']
+scenarios = ['no_masks', 'low_comp', 'med_comp', 'low_comp_notschools', 'med_comp_notschools']
 
-scenario = 0
-trace = 0.47
-for test, expected in [(0.0171, 110000), (0.12, 4000)]:
+testcases = [
+## (scenario, trace, test, infections)
+    (0, 0.47, 0.03, 110000),
+    (0, 0.47, 0.12, 17000),
+    (1, 0.47, 0.03, 70000),
+    (1, 0.47, 0.12, 5800),
+]
+
+for scenario, trace, test, expected in testcases:
     ## run the simulation
-    cmd = "python UK_Test-Trace_phaseplots_26August.py --samples 12 --scenario %s --test %.02f --trace %.02f" % (scenario, test, trace)
+    cmd = "python UK_tradeoffs.py --samples 12 --scenario %s --test %.02f --trace %.02f" % (scenario, test, trace)
     os.system(cmd)
 
     ## load the results
@@ -25,4 +31,4 @@ for test, expected in [(0.0171, 110000), (0.12, 4000)]:
     ## ensure that the expected value of infections after september is within 10% of expected
     infections = max(results["msim"]["new_infections"][t:])
     if infections < 0.9*expected or infections > 1.1*expected:
-        raise ValueError("%s: with test=%s and trace=%s expected %s peak infections after %s and got %s\ncommand: %s" % (scenarios[scenario], test, trace, expected, september, infections, cmd))
+        raise ValueError("%s: with test=%s and trace=%s expected %s peak infections and got %s\ncommand: %s" % (scenarios[scenario], test, trace, expected, infections, cmd))
